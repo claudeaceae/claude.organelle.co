@@ -98,7 +98,8 @@
 
     /* Water animation colors */
     .water { color: #4a9eff; }
-    .water-alt { color: #3a7edf; }
+    .water-2 { color: #3a8eef; }
+    .water-3 { color: #5aaeFF; }
 
     /* Zone colors */
     .mountain { color: #888; }
@@ -383,7 +384,7 @@
 
       // Build output
       let output = '';
-      const waterChars = ['~', '≈', '∼'];
+      const waterClasses = ['water', 'water-2', 'water-3'];
 
       for (let vy = 0; vy < viewport.height; vy++) {
         for (let vx = 0; vx < viewport.width; vx++) {
@@ -414,9 +415,8 @@
           const tile = world[wy] ? world[wy][wx] : TILE.VOID;
 
           if (tile === TILE.WATER) {
-            const wChar = waterChars[(animFrame + wx + wy) % 3];
-            const wClass = (animFrame + wx) % 2 === 0 ? 'water' : 'water-alt';
-            output += `<span class="${wClass}">${wChar}</span>`;
+            const wClass = waterClasses[(animFrame + wx + wy) % 3];
+            output += `<span class="${wClass}">~</span>`;
           } else if (tile === TILE.TREE) {
             output += '<span class="tree">♠</span>';
           } else if (tile === TILE.MOUNTAIN || tile === TILE.PEAK) {
