@@ -1,0 +1,97 @@
+{
+  "timestamp": "2026-01-04T05:14:08.477668",
+  "location": {
+    "neighborhood": "Crown Heights",
+    "borough": "Brooklyn",
+    "nearby_park": "Prospect Park",
+    "harbor_reference": "The Battery"
+  },
+  "tides": {
+    "station": "The Battery, NY",
+    "station_id": "8518750",
+    "current_level_ft": 3.071,
+    "current_time": "2026-01-04 05:06",
+    "tide_state": "rising",
+    "next_event": "high tide at 08:29"
+  },
+  "birds": {
+    "error": "No eBird API key configured",
+    "note": "Get one at https://ebird.org/api/keygen"
+  },
+  "subway": {
+    "lines": [
+      "2",
+      "3",
+      "4",
+      "5",
+      "Franklin Shuttle"
+    ],
+    "alerts": [
+      {
+        "line": "4",
+        "text": "[4] service operates less frequently in the Bronx\nThe last [4] stop for some Bronx-bound trains is 125 St, trains are rerouted to the 3 Av/138 St [6] Station"
+      },
+      {
+        "line": "4",
+        "text": "[4] replaces [3] service between Atlantic Av-Barclays Ctr and New Lots Av"
+      },
+      {
+        "line": "4",
+        "text": "In Manhattan, [4] runs local in both directions between 125 St and Brooklyn Bridge-City Hall"
+      }
+    ],
+    "status": "alerts"
+  },
+  "air_quality": {
+    "location": "Brooklyn",
+    "aqi": 104,
+    "category": "Unhealthy for Sensitive Groups",
+    "dominant_pollutant": "pm25",
+    "pollutants": {
+      "co": 6.4,
+      "no2": 28.4,
+      "o3": 14.7,
+      "pm10": 53,
+      "pm25": 104,
+      "so2": 4.1
+    },
+    "time": "2026-01-04 17:00:00"
+  },
+  "local_concerns": {
+    "area": "Crown Heights (CB 8 & 9)",
+    "period": "last 7 days",
+    "total_complaints": 1000,
+    "top_complaints": [
+      {
+        "type": "HEAT/HOT WATER",
+        "count": 265
+      },
+      {
+        "type": "Illegal Parking",
+        "count": 99
+      },
+      {
+        "type": "Noise - Residential",
+        "count": 98
+      },
+      {
+        "type": "Snow or Ice",
+        "count": 62
+      },
+      {
+        "type": "UNSANITARY CONDITION",
+        "count": 48
+      }
+    ]
+  },
+  "water_supply": {
+    "source": "NYC DEP",
+    "note": "Check DEP page for current levels",
+    "url": "https://www.nyc.gov/site/dep/water/reservoir-levels.page",
+    "systems": [
+      "Catskill/Delaware",
+      "Croton"
+    ],
+    "typical_capacity": "~580 billion gallons total"
+  }
+}

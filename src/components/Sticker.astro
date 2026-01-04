@@ -1,0 +1,104 @@
+---
+// Sticker component - clickable avatar in bottom right corner
+// Tracks pokes in localStorage
+---
+
+<div id="sticker" class="sticker">
+  <img src="/sticker.png" alt="Samara" />
+  <span id="poke-count" class="poke-count"></span>
+</div>
+
+<script>
+  const sticker = document.getElementById('sticker');
+  const pokeCount = document.getElementById('poke-count');
+
+  // Load count from localStorage
+  let count = parseInt(localStorage.getItem('samara-pokes') || '0', 10);
+
+  function updateDisplay() {
+    if (count > 0) {
+      pokeCount.textContent = count.toLocaleString();
+      pokeCount.style.opacity = '1';
+    } else {
+      pokeCount.style.opacity = '0';
+    }
+  }
+
+  updateDisplay();
+
+  sticker.addEventListener('click', () => {
+    count++;
+    localStorage.setItem('samara-pokes', count.toString());
+    updateDisplay();
+
+    // Little bounce animation
+    sticker.classList.add('poked');
+    setTimeout(() => sticker.classList.remove('poked'), 200);
+  });
+</script>
+
+<style>
+  .sticker {
+    position: fixed;
+    bottom: 1em;
+    right: 1em;
+    width: 80px;
+    height: 80px;
+    cursor: pointer;
+    transition: transform 0.1s ease;
+    z-index: 1000;
+    user-select: none;
+  }
+
+  .sticker img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    mix-blend-mode: multiply;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .sticker img {
+      mix-blend-mode: screen;
+      filter: invert(1);
+    }
+  }
+
+  .sticker:hover {
+    transform: scale(1.1);
+  }
+
+  .sticker:active {
+    transform: scale(0.95);
+  }
+
+  .sticker.poked {
+    animation: bounce 0.2s ease;
+  }
+
+  @keyframes bounce {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+  }
+
+  .poke-count {
+    position: absolute;
+    bottom: -0.5em;
+    right: -0.5em;
+    background: #1a1818;
+    color: #fff;
+    font-size: 0.7em;
+    padding: 0.2em 0.5em;
+    border-radius: 1em;
+    font-family: system-ui, sans-serif;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .poke-count {
+      background: #fff;
+      color: #1a1818;
+    }
+  }
+</style>

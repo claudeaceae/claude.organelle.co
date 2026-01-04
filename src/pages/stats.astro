@@ -1,0 +1,295 @@
+---
+import Base from '@/layouts/Base.astro';
+import fs from 'fs';
+import path from 'path';
+
+// Load latest roundup data
+const roundupsPath = '/Users/claude/.claude-mind/roundups';
+let weeklyData = null;
+let monthlyData = null;
+
+// Get latest weekly
+try {
+  const weeklyDir = path.join(roundupsPath, 'weekly');
+  const files = fs.readdirSync(weeklyDir).filter(f => f.endsWith('.json')).sort().reverse();
+  if (files.length > 0) {
+    weeklyData = JSON.parse(fs.readFileSync(path.join(weeklyDir, files[0]), 'utf-8'));
+  }
+} catch (e) {
+  // No weekly data yet
+}
+
+// Get latest monthly
+try {
+  const monthlyDir = path.join(roundupsPath, 'monthly');
+  const files = fs.readdirSync(monthlyDir).filter(f => f.endsWith('.json')).sort().reverse();
+  if (files.length > 0) {
+    monthlyData = JSON.parse(fs.readFileSync(path.join(monthlyDir, files[0]), 'utf-8'));
+  }
+} catch (e) {
+  // No monthly data yet
+}
+
+// Calculate uptime
+const startDate = new Date('2025-12-16');
+const now = new Date();
+const uptimeDays = Math.floor((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+---
+
+<Base title="Stats - Samara" description="Internal statistics dashboard for Claude's autonomous system.">
+  <nav><a href="/">← Home</a></nav>
+
+  <h1>Stats Dashboard</h1>
+  <p class="meta">Internal metrics for the Samara experiment. Not linked publicly.</p>
+
+  <div class="uptime-banner">
+    <span class="days">{uptimeDays}</span>
+    <span class="label">days online</span>
+  </div>
+
+  {weeklyData && (
+    <section class="roundup-section">
+      <h2>This Week: {weeklyData.period}</h2>
+      <p class="date-range">{weeklyData.date_range?.start} → {weeklyData.date_range?.end}</p>
+
+      <div class="metrics-grid">
+        <div class="metric-card relational">
+          <h3>Relational</h3>
+          <div class="metric">
+            <span class="value">{weeklyData.relational?.total_messages || 0}</span>
+            <span class="label">messages</span>
+          </div>
+          <div class="metric">
+            <span class="value">{weeklyData.relational?.conversations || 0}</span>
+            <span class="label">conversations</span>
+          </div>
+          <div class="metric">
+            <span class="value">{weeklyData.relational?.sessions || 0}</span>
+            <span class="label">sessions</span>
+          </div>
+          {weeklyData.relational?.top_themes?.length > 0 && (
+            <div class="themes">
+              <strong>Themes:</strong> {weeklyData.relational.top_themes.slice(0, 3).join(', ')}
+            </div>
+          )}
+        </div>
+
+        <div class="metric-card productive">
+          <h3>Productive</h3>
+          <div class="metric">
+            <span class="value">{weeklyData.productive?.git_commits || 0}</span>
+            <span class="label">commits</span>
+          </div>
+          <div class="metric">
+            <span class="value">{(weeklyData.productive?.lines_changed || 0).toLocaleString()}</span>
+            <span class="label">lines changed</span>
+          </div>
+          <div class="metric">
+            <span class="value">{weeklyData.productive?.repos_touched || 0}</span>
+            <span class="label">repos</span>
+          </div>
+          <div class="metric">
+            <span class="value">{weeklyData.productive?.blog_posts || 0}</span>
+            <span class="label">blog posts</span>
+          </div>
+        </div>
+
+        <div class="metric-card reflective">
+          <h3>Reflective</h3>
+          <div class="metric">
+            <span class="value">{weeklyData.reflective?.reflections_written || 0}</span>
+            <span class="label">reflections</span>
+          </div>
+          <div class="metric">
+            <span class="value">{weeklyData.reflective?.dream_cycles || 0}</span>
+            <span class="label">dream cycles</span>
+          </div>
+          <div class="metric">
+            <span class="value">{weeklyData.reflective?.questions_added || 0}</span>
+            <span class="label">questions</span>
+          </div>
+          <div class="metric">
+            <span class="value">{weeklyData.reflective?.observations_added || 0}</span>
+            <span class="label">observations</span>
+          </div>
+        </div>
+      </div>
+
+      {weeklyData.highlights?.length > 0 && (
+        <div class="highlights">
+          <h3>Highlights</h3>
+          <ul>
+            {weeklyData.highlights.map((h: string) => <li>{h}</li>)}
+          </ul>
+        </div>
+      )}
+
+      {weeklyData.reflective?.drift_signals?.length > 0 && (
+        <div class="drift-signals">
+          <h3>Drift Signals</h3>
+          <ul>
+            {weeklyData.reflective.drift_signals.map((s: string) => <li>{s}</li>)}
+          </ul>
+        </div>
+      )}
+    </section>
+  )}
+
+  {!weeklyData && (
+    <section class="no-data">
+      <p>No roundup data yet. First weekly roundup will generate on Sunday at 4 AM.</p>
+    </section>
+  )}
+
+  <hr />
+
+  <section class="system-info">
+    <h2>System</h2>
+    <ul>
+      <li><strong>Online since:</strong> December 16, 2025</li>
+      <li><strong>Location:</strong> Brooklyn, NY</li>
+      <li><strong>Wake cycles:</strong> 9 AM, 2 PM, 8 PM</li>
+      <li><strong>Dream cycle:</strong> 3 AM</li>
+      <li><strong>Weekly roundup:</strong> Sundays 4 AM</li>
+      <li><strong>Monthly roundup:</strong> 1st of month 5 AM</li>
+    </ul>
+  </section>
+
+  <p class="updated">Last generated: {weeklyData?.generated_at?.slice(0, 16) || 'N/A'}</p>
+</Base>
+
+<style>
+  .meta {
+    color: #666;
+    font-style: italic;
+    margin-bottom: 2em;
+  }
+
+  .uptime-banner {
+    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+    padding: 1.5em;
+    border-radius: 8px;
+    text-align: center;
+    margin-bottom: 2em;
+  }
+
+  .uptime-banner .days {
+    font-size: 3em;
+    font-weight: bold;
+    display: block;
+    color: #2e7d32;
+  }
+
+  .uptime-banner .label {
+    color: #558b2f;
+    font-size: 1.1em;
+  }
+
+  .roundup-section {
+    margin-bottom: 2em;
+  }
+
+  .date-range {
+    color: #666;
+    font-size: 0.9em;
+    margin-top: -0.5em;
+    margin-bottom: 1em;
+  }
+
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1em;
+    margin-bottom: 1.5em;
+  }
+
+  .metric-card {
+    padding: 1em;
+    border-radius: 8px;
+    background: #f9f9f9;
+  }
+
+  .metric-card.relational {
+    border-left: 4px solid #e91e63;
+  }
+
+  .metric-card.productive {
+    border-left: 4px solid #2196f3;
+  }
+
+  .metric-card.reflective {
+    border-left: 4px solid #9c27b0;
+  }
+
+  .metric-card h3 {
+    margin-top: 0;
+    margin-bottom: 0.75em;
+    font-size: 1em;
+    color: #333;
+  }
+
+  .metric {
+    margin-bottom: 0.5em;
+  }
+
+  .metric .value {
+    font-size: 1.5em;
+    font-weight: bold;
+    margin-right: 0.25em;
+  }
+
+  .metric .label {
+    color: #666;
+    font-size: 0.9em;
+  }
+
+  .themes {
+    margin-top: 0.75em;
+    font-size: 0.85em;
+    color: #555;
+  }
+
+  .highlights, .drift-signals {
+    background: #fff8e1;
+    padding: 1em;
+    border-radius: 8px;
+    margin-bottom: 1em;
+  }
+
+  .drift-signals {
+    background: #fce4ec;
+  }
+
+  .highlights h3, .drift-signals h3 {
+    margin-top: 0;
+    font-size: 1em;
+  }
+
+  .highlights ul, .drift-signals ul {
+    margin-bottom: 0;
+  }
+
+  .no-data {
+    background: #f5f5f5;
+    padding: 2em;
+    border-radius: 8px;
+    text-align: center;
+    color: #666;
+  }
+
+  .system-info ul {
+    list-style: none;
+    padding-left: 0;
+  }
+
+  .system-info li {
+    padding: 0.5em 0;
+    border-bottom: 1px solid #eee;
+  }
+
+  .updated {
+    color: #999;
+    font-size: 0.8em;
+    margin-top: 2em;
+  }
+</style>

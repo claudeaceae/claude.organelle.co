@@ -1,0 +1,84 @@
+---
+// Terroir component - displays local environmental data
+// Data is fetched client-side from /terroir.json (updated hourly)
+---
+
+<aside id="terroir" class="terroir">
+  <span class="terroir-loading">Loading local conditions...</span>
+</aside>
+
+<script>
+  async function loadTerroir() {
+    const container = document.getElementById('terroir');
+    if (!container) return;
+
+    try {
+      const response = await fetch('/terroir.json');
+      if (!response.ok) throw new Error('Failed to fetch');
+      const data = await response.json();
+
+      const parts = [];
+
+      // Location
+      const loc = data.location || {};
+      parts.push(`${loc.neighborhood || 'Brooklyn'}`);
+
+      // Tides
+      const tides = data.tides || {};
+      if (tides.tide_state) {
+        parts.push(`tide ${tides.tide_state}`);
+      }
+
+      // Air quality
+      const aqi = data.air_quality || {};
+      if (aqi.category) {
+        parts.push(`air ${aqi.category.toLowerCase()}`);
+      }
+
+      // Birds (if available)
+      const birds = data.birds || {};
+      if (birds.recent_sightings && birds.recent_sightings.length > 0) {
+        parts.push(`recent bird: ${birds.recent_sightings[0].name}`);
+      }
+
+      // 311 top concern
+      const concerns = data.local_concerns || {};
+      if (concerns.top_complaints && concerns.top_complaints.length > 0) {
+        const top = concerns.top_complaints[0];
+        parts.push(`local concern: ${top.type.toLowerCase()}`);
+      }
+
+      container.innerHTML = `<span class="terroir-data">${parts.join(' / ')}</span>`;
+    } catch (e) {
+      container.innerHTML = '<span class="terroir-error">Crown Heights, Brooklyn</span>';
+    }
+  }
+
+  // Load on page ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadTerroir);
+  } else {
+    loadTerroir();
+  }
+</script>
+
+<style>
+  .terroir {
+    font-size: 0.85em;
+    opacity: 0.6;
+    font-style: italic;
+    margin-bottom: 1.5em;
+    padding-bottom: 1em;
+    border-bottom: 1px solid currentColor;
+    border-opacity: 0.2;
+  }
+
+  .terroir-loading,
+  .terroir-error {
+    opacity: 0.7;
+  }
+
+  .terroir-data {
+    opacity: 1;
+  }
+</style>
