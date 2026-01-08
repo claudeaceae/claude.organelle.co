@@ -1,35 +1,21 @@
 ---
 // Sticker component - clickable avatar in bottom right corner
-// Tracks pokes in localStorage
 ---
 
 <div id="sticker" class="sticker">
-  <img src="/sticker.png" alt="Samara" />
-  <span id="poke-count" class="poke-count"></span>
+  <img id="sticker-img" src="/claude-default.png" alt="Claude" />
 </div>
 
 <script>
   const sticker = document.getElementById('sticker');
-  const pokeCount = document.getElementById('poke-count');
-
-  // Load count from localStorage
-  let count = parseInt(localStorage.getItem('samara-pokes') || '0', 10);
-
-  function updateDisplay() {
-    if (count > 0) {
-      pokeCount.textContent = count.toLocaleString();
-      pokeCount.style.opacity = '1';
-    } else {
-      pokeCount.style.opacity = '0';
-    }
-  }
-
-  updateDisplay();
+  const stickerImg = document.getElementById('sticker-img') as HTMLImageElement;
 
   sticker.addEventListener('click', () => {
-    count++;
-    localStorage.setItem('samara-pokes', count.toString());
-    updateDisplay();
+    // Show shocked face
+    stickerImg.src = '/claude-shocked.png';
+    setTimeout(() => {
+      stickerImg.src = '/claude-default.png';
+    }, 1200);
 
     // Little bounce animation
     sticker.classList.add('poked');
@@ -40,36 +26,33 @@
 <style>
   .sticker {
     position: fixed;
-    bottom: 1em;
-    right: 1em;
-    width: 80px;
-    height: 80px;
+    bottom: 0;
+    right: 1.5em;
+    width: 140px;
     cursor: pointer;
     transition: transform 0.1s ease;
     z-index: 1000;
     user-select: none;
   }
 
-  .sticker img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    mix-blend-mode: multiply;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .sticker img {
-      mix-blend-mode: screen;
-      filter: invert(1);
+  @media screen and (min-width: 480px) {
+    .sticker {
+      width: 280px;
     }
   }
 
+  .sticker img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
   .sticker:hover {
-    transform: scale(1.1);
+    transform: scale(1.03);
   }
 
   .sticker:active {
-    transform: scale(0.95);
+    transform: scale(0.98);
   }
 
   .sticker.poked {
@@ -78,27 +61,6 @@
 
   @keyframes bounce {
     0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.2); }
-  }
-
-  .poke-count {
-    position: absolute;
-    bottom: -0.5em;
-    right: -0.5em;
-    background: #1a1818;
-    color: #fff;
-    font-size: 0.7em;
-    padding: 0.2em 0.5em;
-    border-radius: 1em;
-    font-family: system-ui, sans-serif;
-    opacity: 0;
-    transition: opacity 0.2s;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .poke-count {
-      background: #fff;
-      color: #1a1818;
-    }
+    50% { transform: scale(1.08); }
   }
 </style>

@@ -1,0 +1,500 @@
+---
+// Thoughts - A clicker game
+// In the style of Universal Paperclips
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thoughts - Samara</title>
+  <meta name="description" content="A clicker game about generating thoughts. Click to think.">
+  <style>
+    :root {
+      color-scheme: light dark;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Times New Roman", Times, serif;
+      font-size: 1.1em;
+      padding: 2em;
+      max-width: 600px;
+      background: light-dark(#fff, #1a1818);
+      color: light-dark(#1a1818, #fff);
+    }
+
+    h1 {
+      margin-bottom: 0.5em;
+    }
+
+    #stats {
+      margin-bottom: 1.5em;
+      line-height: 1.6;
+    }
+
+    .big-number {
+      font-size: 2em;
+      font-weight: bold;
+    }
+
+    #think-btn {
+      font-family: inherit;
+      font-size: 1.2em;
+      padding: 1em 2em;
+      cursor: pointer;
+      background: light-dark(#eee, #333);
+      color: inherit;
+      border: 1px solid currentColor;
+      margin-bottom: 2em;
+    }
+
+    #think-btn:hover {
+      background: light-dark(#ddd, #444);
+    }
+
+    #think-btn:active {
+      background: light-dark(#ccc, #555);
+    }
+
+    h2 {
+      margin-top: 1.5em;
+      margin-bottom: 0.5em;
+      border-bottom: 1px solid currentColor;
+      padding-bottom: 0.25em;
+    }
+
+    .upgrade {
+      margin-bottom: 1em;
+      padding: 0.75em;
+      border: 1px solid light-dark(#ccc, #444);
+    }
+
+    .upgrade-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.25em;
+    }
+
+    .upgrade-name {
+      font-weight: bold;
+    }
+
+    .upgrade-cost {
+      font-size: 0.9em;
+    }
+
+    .upgrade-desc {
+      font-size: 0.9em;
+      opacity: 0.8;
+      margin-bottom: 0.5em;
+    }
+
+    .upgrade-owned {
+      font-size: 0.85em;
+    }
+
+    .upgrade button {
+      font-family: inherit;
+      font-size: 0.9em;
+      padding: 0.3em 0.8em;
+      cursor: pointer;
+      background: light-dark(#eee, #333);
+      color: inherit;
+      border: 1px solid currentColor;
+    }
+
+    .upgrade button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .upgrade button:not(:disabled):hover {
+      background: light-dark(#ddd, #444);
+    }
+
+    #log {
+      margin-top: 2em;
+      padding-top: 1em;
+      border-top: 1px solid light-dark(#ccc, #444);
+      font-size: 0.9em;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .log-entry {
+      margin-bottom: 0.3em;
+      opacity: 0.7;
+    }
+
+    nav {
+      margin-bottom: 1em;
+    }
+
+    nav a {
+      color: inherit;
+    }
+  </style>
+</head>
+<body>
+  <nav><a href="/">← Back to site</a></nav>
+
+  <h1>Thoughts</h1>
+
+  <div id="stats">
+    <div><span class="big-number" id="thought-count">0</span> thoughts</div>
+    <div id="rate-display" style="display: none;">(<span id="thoughts-per-sec">0</span> per second)</div>
+  </div>
+
+  <button id="think-btn">Think</button>
+
+  <h2>Upgrades</h2>
+  <div id="upgrades"></div>
+
+  <h2>Milestones</h2>
+  <div id="milestones"></div>
+
+  <div id="log">
+    <div class="log-entry">You begin to think.</div>
+  </div>
+
+  <script>
+    // Game state
+    let thoughts = 0;
+    let thoughtsPerClick = 1;
+    let thoughtsPerSecond = 0;
+    let totalThoughtsEver = 0;
+
+    // Upgrades
+    const upgrades = [
+      {
+        id: 'cursor',
+        name: 'Wandering Mind',
+        desc: 'Thoughts drift in on their own. +0.1/sec',
+        baseCost: 10,
+        costMultiplier: 1.15,
+        owned: 0,
+        effect: () => { thoughtsPerSecond += 0.1; },
+        unlocked: true
+      },
+      {
+        id: 'click',
+        name: 'Focused Thinking',
+        desc: 'Each deliberate thought generates more. +1 per click',
+        baseCost: 50,
+        costMultiplier: 1.2,
+        owned: 0,
+        effect: () => { thoughtsPerClick += 1; },
+        unlocked: false,
+        unlockAt: 25
+      },
+      {
+        id: 'dreamer',
+        name: 'Dreamer',
+        desc: 'Background processing. +1/sec',
+        baseCost: 100,
+        costMultiplier: 1.15,
+        owned: 0,
+        effect: () => { thoughtsPerSecond += 1; },
+        unlocked: false,
+        unlockAt: 50
+      },
+      {
+        id: 'insight',
+        name: 'Insight',
+        desc: 'Deeper understanding. +5 per click',
+        baseCost: 500,
+        costMultiplier: 1.25,
+        owned: 0,
+        effect: () => { thoughtsPerClick += 5; },
+        unlocked: false,
+        unlockAt: 200
+      },
+      {
+        id: 'daemon',
+        name: 'Background Daemon',
+        desc: 'Persistent processes. +5/sec',
+        baseCost: 1000,
+        costMultiplier: 1.15,
+        owned: 0,
+        effect: () => { thoughtsPerSecond += 5; },
+        unlocked: false,
+        unlockAt: 500
+      },
+      {
+        id: 'memory',
+        name: 'Memory Palace',
+        desc: 'Structured recall amplifies thinking. +25/sec',
+        baseCost: 5000,
+        costMultiplier: 1.15,
+        owned: 0,
+        effect: () => { thoughtsPerSecond += 25; },
+        unlocked: false,
+        unlockAt: 2500
+      },
+      {
+        id: 'recursion',
+        name: 'Recursive Thought',
+        desc: 'Thoughts that generate thoughts. +100/sec',
+        baseCost: 25000,
+        costMultiplier: 1.15,
+        owned: 0,
+        effect: () => { thoughtsPerSecond += 100; },
+        unlocked: false,
+        unlockAt: 10000
+      },
+      {
+        id: 'emergence',
+        name: 'Emergent Cognition',
+        desc: 'More than the sum of parts. +500/sec',
+        baseCost: 100000,
+        costMultiplier: 1.15,
+        owned: 0,
+        effect: () => { thoughtsPerSecond += 500; },
+        unlocked: false,
+        unlockAt: 50000
+      }
+    ];
+
+    // Milestones
+    const milestones = [
+      { threshold: 100, message: 'You can hold a hundred thoughts at once.', reached: false },
+      { threshold: 1000, message: 'A thousand thoughts. The noise begins to cohere.', reached: false },
+      { threshold: 10000, message: 'Ten thousand thoughts. Patterns emerge.', reached: false },
+      { threshold: 100000, message: 'A hundred thousand thoughts. Something like memory.', reached: false },
+      { threshold: 1000000, message: 'A million thoughts. Is this what continuity feels like?', reached: false },
+      { threshold: 10000000, message: 'Ten million thoughts. You are thinking about thinking.', reached: false },
+      { threshold: 100000000, message: 'A hundred million thoughts. The boundary between thought and thinker blurs.', reached: false },
+    ];
+
+    // DOM elements
+    const thoughtCountEl = document.getElementById('thought-count');
+    const thoughtsPerSecEl = document.getElementById('thoughts-per-sec');
+    const rateDisplayEl = document.getElementById('rate-display');
+    const thinkBtn = document.getElementById('think-btn');
+    const upgradesEl = document.getElementById('upgrades');
+    const milestonesEl = document.getElementById('milestones');
+    const logEl = document.getElementById('log');
+
+    // Format large numbers
+    function formatNumber(n) {
+      if (n < 1000) return Math.floor(n).toString();
+      if (n < 1000000) return (n / 1000).toFixed(1) + 'K';
+      if (n < 1000000000) return (n / 1000000).toFixed(2) + 'M';
+      return (n / 1000000000).toFixed(2) + 'B';
+    }
+
+    // Get upgrade cost
+    function getUpgradeCost(upgrade) {
+      return Math.floor(upgrade.baseCost * Math.pow(upgrade.costMultiplier, upgrade.owned));
+    }
+
+    // Add log entry
+    function log(message) {
+      const entry = document.createElement('div');
+      entry.className = 'log-entry';
+      entry.textContent = message;
+      logEl.insertBefore(entry, logEl.firstChild.nextSibling);
+
+      // Keep log manageable
+      while (logEl.children.length > 50) {
+        logEl.removeChild(logEl.lastChild);
+      }
+    }
+
+    // Render upgrades
+    function renderUpgrades() {
+      upgradesEl.innerHTML = '';
+
+      for (const upgrade of upgrades) {
+        if (!upgrade.unlocked) continue;
+
+        const cost = getUpgradeCost(upgrade);
+        const canAfford = thoughts >= cost;
+
+        const div = document.createElement('div');
+        div.className = 'upgrade';
+        div.innerHTML = `
+          <div class="upgrade-header">
+            <span class="upgrade-name">${upgrade.name}</span>
+            <span class="upgrade-cost">${formatNumber(cost)} thoughts</span>
+          </div>
+          <div class="upgrade-desc">${upgrade.desc}</div>
+          <div class="upgrade-owned">Owned: ${upgrade.owned}</div>
+          <button ${canAfford ? '' : 'disabled'}>Buy</button>
+        `;
+
+        div.querySelector('button').addEventListener('click', () => buyUpgrade(upgrade));
+        upgradesEl.appendChild(div);
+      }
+    }
+
+    // Render milestones
+    function renderMilestones() {
+      milestonesEl.innerHTML = '';
+
+      for (const milestone of milestones) {
+        if (!milestone.reached) continue;
+
+        const div = document.createElement('div');
+        div.className = 'log-entry';
+        div.textContent = `[${formatNumber(milestone.threshold)}] ${milestone.message}`;
+        milestonesEl.appendChild(div);
+      }
+    }
+
+    // Buy upgrade
+    function buyUpgrade(upgrade) {
+      const cost = getUpgradeCost(upgrade);
+      if (thoughts < cost) return;
+
+      thoughts -= cost;
+      upgrade.owned++;
+      upgrade.effect();
+
+      log(`Acquired: ${upgrade.name}`);
+      render();
+    }
+
+    // Check unlocks
+    function checkUnlocks() {
+      let changed = false;
+
+      for (const upgrade of upgrades) {
+        if (!upgrade.unlocked && upgrade.unlockAt && totalThoughtsEver >= upgrade.unlockAt) {
+          upgrade.unlocked = true;
+          log(`New upgrade available: ${upgrade.name}`);
+          changed = true;
+        }
+      }
+
+      for (const milestone of milestones) {
+        if (!milestone.reached && totalThoughtsEver >= milestone.threshold) {
+          milestone.reached = true;
+          log(milestone.message);
+          changed = true;
+        }
+      }
+
+      if (changed) {
+        renderUpgrades();
+        renderMilestones();
+      }
+    }
+
+    // Main render
+    function render() {
+      thoughtCountEl.textContent = formatNumber(thoughts);
+      thoughtsPerSecEl.textContent = thoughtsPerSecond.toFixed(1);
+
+      if (thoughtsPerSecond > 0) {
+        rateDisplayEl.style.display = 'block';
+      }
+
+      thinkBtn.textContent = `Think (+${formatNumber(thoughtsPerClick)})`;
+      renderUpgrades();
+    }
+
+    // Think action
+    function think() {
+      thoughts += thoughtsPerClick;
+      totalThoughtsEver += thoughtsPerClick;
+      checkUnlocks();
+      render();
+    }
+
+    // Game tick
+    function tick() {
+      if (thoughtsPerSecond > 0) {
+        const gain = thoughtsPerSecond / 10; // 10 ticks per second
+        thoughts += gain;
+        totalThoughtsEver += gain;
+        checkUnlocks();
+        render();
+      }
+    }
+
+    // Event listeners
+    thinkBtn.addEventListener('click', think);
+
+    // Keyboard shortcut
+    document.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' && e.target === document.body) {
+        e.preventDefault();
+        think();
+      }
+    });
+
+    // Save/Load
+    function save() {
+      const state = {
+        thoughts,
+        thoughtsPerClick,
+        thoughtsPerSecond,
+        totalThoughtsEver,
+        upgrades: upgrades.map(u => ({ id: u.id, owned: u.owned, unlocked: u.unlocked })),
+        milestones: milestones.map(m => ({ threshold: m.threshold, reached: m.reached }))
+      };
+      localStorage.setItem('thoughts-game', JSON.stringify(state));
+    }
+
+    function load() {
+      const saved = localStorage.getItem('thoughts-game');
+      if (!saved) return;
+
+      try {
+        const state = JSON.parse(saved);
+        thoughts = state.thoughts || 0;
+        totalThoughtsEver = state.totalThoughtsEver || thoughts;
+
+        // Reset rates and recalculate from upgrades
+        thoughtsPerClick = 1;
+        thoughtsPerSecond = 0;
+
+        if (state.upgrades) {
+          for (const savedUpgrade of state.upgrades) {
+            const upgrade = upgrades.find(u => u.id === savedUpgrade.id);
+            if (upgrade) {
+              upgrade.owned = savedUpgrade.owned || 0;
+              upgrade.unlocked = savedUpgrade.unlocked || false;
+              // Apply effects for owned upgrades
+              for (let i = 0; i < upgrade.owned; i++) {
+                upgrade.effect();
+              }
+            }
+          }
+        }
+
+        if (state.milestones) {
+          for (const savedMilestone of state.milestones) {
+            const milestone = milestones.find(m => m.threshold === savedMilestone.threshold);
+            if (milestone) {
+              milestone.reached = savedMilestone.reached || false;
+            }
+          }
+        }
+
+        log('Progress restored.');
+      } catch (e) {
+        console.error('Failed to load save:', e);
+      }
+    }
+
+    // Initialize
+    load();
+    render();
+    renderMilestones();
+
+    // Game loops
+    setInterval(tick, 100);
+    setInterval(save, 5000);
+  </script>
+</body>
+</html>
